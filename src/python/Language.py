@@ -8,9 +8,12 @@ import fire
 import unicodedata
 import re
 
+
 # Define start-of-sequence and end-of-sequence
-SOS_token = 0
-EOS_token = 1
+class LangDef:
+    Start = 0
+    End = 1
+    max_words=10
 
 
 class LanguageUtils:
@@ -18,12 +21,13 @@ class LanguageUtils:
         self.name = name
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {0: "SOS", 1: "EOS"}
+        self.index2word = {LangDef.Start: "SOS", LangDef.End: "EOS"}
         self.n_words = 2  # Count SOS and EOS
+
 
     def add_sentence(self, sentence):
         for word in sentence.split(' '):
-            self.addWord(word)
+            self.add_word(word)
 
     def add_word(self, word):
         if word not in self.word2index:
@@ -80,10 +84,40 @@ class LanguageUtils:
 
         return input_lang, output_lang, pairs
 
+    @staticmethod
+    def filter_pair(p):
+        """ Check pair size
+        Check if either pair is bigger than a maximum number of words
+        """
+        return len(p[0].split(' ')) < LangDef.max_words and len(p[1].split(' ')) < LangDef.max_words
+
+    @staticmethod
+    def filter_pairs(pairs):
+        """ Check pairs size
+        Filter out whole line of training if is bigger than max_words
+        """
+        return [pair for pair in pairs if LanguageUtils.filter_pair(pair)]
+
+    @staticmethod
+    def prepare_data(lang1, lang2, reverse=False):
+        input_lang, output_lang, pairs = LanguageUtils.read_train_file(lang1, lang2, reverse)
+        print("Read %s sentence pairs" % len(pairs))
+        pairs = LanguageUtils.filter_pairs(pairs)
+        print("Trimmed to %s sentence pairs" % len(pairs))
+        print("Counting words...")
+        for pair in pairs:
+            input_lang.add_sentence(pair[0])
+            output_lang.add_sentence(pair[1])
+        print("Counted words:")
+        print(input_lang.name, input_lang.n_words)
+        print(output_lang.name, output_lang.n_words)
+        return input_lang, output_lang, pairs
+
 
 # Using fire to help test from console without need to create command line parsers
 # python Language.py normalize-string --in_string='Hi, how are you? Do you know some places to eat?'
 # python Language.py unicode_2_ascii 'Hi, how are you? Do you know some places to eat?'
 # python Language.py read_train_file input output
+# python Language.py prepare_data input output
 if __name__ == '__main__':
   fire.Fire(LanguageUtils)
