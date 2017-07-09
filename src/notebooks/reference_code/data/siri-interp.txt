@@ -1,0 +1,6 @@
+Thai.	I would like some thai food.
+Sushi.	Where can I find good sushi.
+none.	Find me a place that does tapas.
+East Asian.	Which restaurants do East Asian food.
+West Indian, Indian.	Which restaurants do West Indian food.
+none.	What is the weather like today.
