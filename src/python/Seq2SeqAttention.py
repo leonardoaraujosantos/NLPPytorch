@@ -14,8 +14,9 @@ use_cuda = torch.cuda.is_available()
 
 
 # Sequence to Sequence Encoder using GRU layer
+# The encoder outputs a vector and a hidden state for each word on the input
 class EncoderGRU(nn.Module):
-    def __init__(self, input_size, hidden_size, n_layers=1):
+    def __init__(self, input_size, hidden_size=16, n_layers=1):
         super(EncoderGRU, self).__init__()
         self.n_layers = n_layers
         self.hidden_size = hidden_size
@@ -43,7 +44,7 @@ class EncoderGRU(nn.Module):
 
 # Sequence to Sequence Decoder with Attention
 class AttentionDecoderGRU(nn.Module):
-    def __init__(self, hidden_size, output_size, n_layers=1, dropout_p=0.1, max_length=LangDef.max_words):
+    def __init__(self, output_size, hidden_size=16, n_layers=1, dropout_p=0.1, max_length=LangDef.max_words):
         super(AttentionDecoderGRU, self).__init__()
         self.hidden_size = hidden_size
         self.output_size = output_size
@@ -51,6 +52,7 @@ class AttentionDecoderGRU(nn.Module):
         self.dropout_p = dropout_p
         self.max_length = max_length
 
+        # Initialize nn modules
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
         self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
         self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
@@ -62,6 +64,7 @@ class AttentionDecoderGRU(nn.Module):
         embedded = self.embedding(input).view(1, 1, -1)
         embedded = self.dropout(embedded)
 
+        # Global Attention
         attn_weights = F.softmax(
             self.attn(torch.cat((embedded[0], hidden[0]), 1)))
         attn_applied = torch.bmm(attn_weights.unsqueeze(0),
@@ -70,6 +73,7 @@ class AttentionDecoderGRU(nn.Module):
         output = torch.cat((embedded[0], attn_applied[0]), 1)
         output = self.attn_combine(output).unsqueeze(0)
 
+        # GRU layer
         for i in range(self.n_layers):
             output = F.relu(output)
             output, hidden = self.gru(output, hidden)

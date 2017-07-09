@@ -11,8 +11,8 @@ import re
 
 # Define start-of-sequence and end-of-sequence
 class LangDef:
-    Start = 0
-    End = 1
+    StartToken = 0
+    EndToken = 1
     max_words=10
 
 
@@ -21,7 +21,7 @@ class LanguageUtils:
         self.name = name
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {LangDef.Start: "SOS", LangDef.End: "EOS"}
+        self.index2word = {LangDef.StartToken: "SOS", LangDef.EndToken: "EOS"}
         self.n_words = 2  # Count SOS and EOS
 
 
