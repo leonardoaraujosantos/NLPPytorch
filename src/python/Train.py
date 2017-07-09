@@ -10,6 +10,10 @@ References:
     * http://minds.jacobs-university.de/sites/default/files/uploads/papers/ESNTutorialRev.pdf
     * https://www.quora.com/Should-you-use-teacher-forcing-in-LSTM-or-GRU-networks-is-the-forget-gate-sufficient
     * https://github.com/google/python-fire/blob/master/doc/guide.md
+    * https://github.com/pytorch/examples/blob/master/imagenet/main.py
+
+How to use:
+python Train.py --print_every=100
 """
 
 import fire
@@ -135,8 +139,9 @@ def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_ever
 
     # Push encoder and decoder to the GPU
     if use_cuda:
-        encoder1 = encoder.cuda()
-        attn_decoder1 = decoder.cuda()
+        print('Push encoder/decoder to GPU')
+        encoder = encoder.cuda()
+        decoder = decoder.cuda()
 
     # Configure optimizer for decoder and encoder as Stochastic Gradient Descent
     encoder_optimizer = optim.SGD(encoder.parameters(), lr=learn_rate)
@@ -171,8 +176,10 @@ def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_ever
 
 
     # Save the encoder and decoder parameters
-    torch.save(encoder.state_dict(), 'encoder.pkl')
-    torch.save(decoder.state_dict(), 'decoder.pkl')
+    info_encoder = {'state_dict': encoder.state_dict(),'in_size':input_lang.n_words, 'hidd_size':hidd_size}
+    info_decoder = {'state_dict': decoder.state_dict(), 'out_size': output_lang.n_words, 'hidd_size': hidd_size}
+    torch.save(info_encoder, 'encoder.pkl')
+    torch.save(info_decoder, 'decoder.pkl')
 
     return plot_losses
 
