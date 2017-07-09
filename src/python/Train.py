@@ -107,31 +107,16 @@ def train_step(in_var, label_var, encoder, decoder, enc_optim, dec_optimizer, cr
 
     return loss.data[0] / target_length
 
-def sentence_2_variable(lang, sentence):
-    """ Convert sentence (streams of word vectors) to pytorch variable
-    """
-    indexes = lang.sentence_2_indexes(sentence)
-    indexes.append(LangDef.EndToken)
-    result = Variable(torch.LongTensor(indexes).view(-1, 1))
-    if use_cuda:
-        return result.cuda()
-    else:
-        return result
 
-
-def pair_2_variable(in_lang, target_lang, pair):
-    input_variable = sentence_2_variable(in_lang, pair[0])
-    target_variable = sentence_2_variable(target_lang, pair[1])
-    return (input_variable, target_variable)
-
-
-def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_every=500, learn_rate=0.01, hidd_size=16):
+def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_every=500,
+          learn_rate=0.01, hidd_size=16, rev_train=False):
     plot_losses = []
     print_loss_total = 0  # Reset every print_every
     plot_loss_total = 0  # Reset every plot_every
 
     # Read and prepare train file
-    input_lang, output_lang, pairs = LanguageUtils.prepare_data('question','interpet',reverse=False, file_path=train_file)
+    input_lang, output_lang, pairs = LanguageUtils.prepare_data('question', 'answer', reverse=rev_train,
+                                                                file_path=train_file)
 
     # Initialize Encoder and Decoder
     encoder = EncoderGRU(input_lang.n_words, hidd_size)
@@ -147,7 +132,7 @@ def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_ever
     encoder_optimizer = optim.SGD(encoder.parameters(), lr=learn_rate)
     decoder_optimizer = optim.SGD(decoder.parameters(), lr=learn_rate)
 
-    training_pairs = [pair_2_variable(input_lang, output_lang, random.choice(pairs))
+    training_pairs = [LanguageUtils.pair_2_variable(input_lang, output_lang, random.choice(pairs))
                       for i in range(n_iters)]
 
     # Get negative log likelihood loss (Multinomial Cross entropy)
@@ -176,7 +161,8 @@ def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_ever
 
 
     # Save the encoder and decoder parameters
-    info_encoder = {'state_dict': encoder.state_dict(),'in_size':input_lang.n_words, 'hidd_size':hidd_size}
+    info_encoder = {'state_dict': encoder.state_dict(),'in_size':input_lang.n_words,
+                    'hidd_size':hidd_size, 'in_lang': input_lang, 'out_lang': output_lang}
     info_decoder = {'state_dict': decoder.state_dict(), 'out_size': output_lang.n_words, 'hidd_size': hidd_size}
     torch.save(info_encoder, 'encoder.pkl')
     torch.save(info_decoder, 'decoder.pkl')

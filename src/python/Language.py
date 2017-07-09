@@ -8,6 +8,12 @@ import fire
 import unicodedata
 import re
 
+import torch
+from torch.autograd import Variable
+
+# Check if cuda is available and populate flag accordingly.
+use_cuda = torch.cuda.is_available()
+
 
 # Define start-of-sequence and end-of-sequence
 class LangDef:
@@ -24,7 +30,6 @@ class LanguageUtils:
         self.index2word = {LangDef.StartToken: "SOS", LangDef.EndToken: "EOS"}
         self.n_words = 2  # Count SOS and EOS
 
-
     def add_sentence(self, sentence):
         for word in sentence.split(' '):
             self.add_word(word)
@@ -39,7 +44,16 @@ class LanguageUtils:
             self.word2count[word] += 1
 
     def sentence_2_indexes(self, sentence):
-        return [self.word2index[word] for word in sentence.split(' ')]
+        list_index = []
+        for word in sentence.split(' '):
+            try:
+                list_index.append(self.word2index[word])
+            except:
+                print('word:', word, 'not on dictionary, replace with EOS')
+                list_index.append(LangDef.EndToken)
+
+        return list_index
+        #return [self.word2index[word] for word in sentence.split(' ')]
 
     @staticmethod
     def unicode_2_ascii(in_string):
@@ -57,11 +71,11 @@ class LanguageUtils:
         """ Take out some punctiation and convert string to lowecase
         """
         # Make lower
-        s = LanguageUtils.unicode_2_ascii(in_string.lower().strip())
+        in_string = LanguageUtils.unicode_2_ascii(in_string.lower().strip())
         # Trim punctiation
-        s = re.sub(r"([.!?])", r" \1", in_string)
-        s = re.sub(r"[^a-zA-Z.!?]+", r" ", in_string)
-        return s
+        in_string = re.sub(r"([.!?])", r" \1", in_string)
+        in_string = re.sub(r"[^a-zA-Z.!?]+", r" ", in_string)
+        return in_string
 
     @staticmethod
     def read_train_file(in_string, out_string, reverse=False, file_path='data/train.txt'):
@@ -115,6 +129,24 @@ class LanguageUtils:
         print(input_lang.name, input_lang.n_words)
         print(output_lang.name, output_lang.n_words)
         return input_lang, output_lang, pairs
+
+    @staticmethod
+    def sentence_2_variable(lang, sentence):
+        """ Convert sentence (streams of word vectors) to pytorch variable
+        """
+        indexes = lang.sentence_2_indexes(sentence)
+        indexes.append(LangDef.EndToken)
+        result = Variable(torch.LongTensor(indexes).view(-1, 1))
+        if use_cuda:
+            return result.cuda()
+        else:
+            return result
+
+    @staticmethod
+    def pair_2_variable(in_lang, target_lang, pair):
+        input_variable = LanguageUtils.sentence_2_variable(in_lang, pair[0])
+        target_variable = LanguageUtils.sentence_2_variable(target_lang, pair[1])
+        return (input_variable, target_variable)
 
 
 # Using fire to help test from console without need to create command line parsers
