@@ -70,6 +70,10 @@ class LanguageUtils:
     def normalize_string(in_string):
         """ Take out some punctiation and convert string to lowecase
         """
+        # Check for valid input type
+        if not isinstance(in_string, str):
+            raise TypeError('Function expect a str type')
+
         # Make lower
         in_string = LanguageUtils.unicode_2_ascii(in_string.lower().strip())
         # Trim punctiation
@@ -82,10 +86,21 @@ class LanguageUtils:
         """ Open train file and convert it's words to vectors
         The filename is expected to have 2 sentences per line separated by TAB
         """
-        print("Reading lines...")
+        # Check for valid input type
+        if not isinstance(reverse, bool):
+            raise TypeError('Function parameter reverse expect a bool type')
+
+        if not isinstance(in_string, str):
+            raise TypeError('Function parameter in_string expect a str type')
+
+        if not isinstance(out_string, str):
+            raise TypeError('Function parameter out_string expect a str type')
 
         # Read the file and and convert to a list on each line
-        lines = open(file_path, encoding='utf-8').read().strip().split('\n')
+        try:
+            lines = open(file_path, encoding='utf-8').read().strip().split('\n')
+        except:
+            raise FileNotFoundError('File %s not found', (file_path))
 
         # Split senteces separated by TAB on each line
         pairs = [[LanguageUtils.normalize_string(s) for s in l.split('\t')] for l in lines]
@@ -118,9 +133,7 @@ class LanguageUtils:
     @staticmethod
     def prepare_data(lang1, lang2, file_path='data/train.txt', reverse=False):
         input_lang, output_lang, pairs = LanguageUtils.read_train_file(lang1, lang2, reverse, file_path)
-        print("Read %s sentence pairs" % len(pairs))
         pairs = LanguageUtils.filter_pairs(pairs)
-        print("Trimmed to %s sentence pairs" % len(pairs))
         print("Counting words...")
         for pair in pairs:
             input_lang.add_sentence(pair[0])
