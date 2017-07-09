@@ -38,6 +38,9 @@ class LanguageUtils:
         else:
             self.word2count[word] += 1
 
+    def sentence_2_indexes(self, sentence):
+        return [self.word2index[word] for word in sentence.split(' ')]
+
     @staticmethod
     def unicode_2_ascii(in_string):
         """ Convert unicode text to ascii
@@ -99,8 +102,8 @@ class LanguageUtils:
         return [pair for pair in pairs if LanguageUtils.filter_pair(pair)]
 
     @staticmethod
-    def prepare_data(lang1, lang2, reverse=False):
-        input_lang, output_lang, pairs = LanguageUtils.read_train_file(lang1, lang2, reverse)
+    def prepare_data(lang1, lang2, file_path='data/train.txt', reverse=False):
+        input_lang, output_lang, pairs = LanguageUtils.read_train_file(lang1, lang2, reverse, file_path)
         print("Read %s sentence pairs" % len(pairs))
         pairs = LanguageUtils.filter_pairs(pairs)
         print("Trimmed to %s sentence pairs" % len(pairs))

@@ -9,10 +9,12 @@ References:
     * https://papers.nips.cc/paper/6099-professor-forcing-a-new-algorithm-for-training-recurrent-networks.pdf
     * http://minds.jacobs-university.de/sites/default/files/uploads/papers/ESNTutorialRev.pdf
     * https://www.quora.com/Should-you-use-teacher-forcing-in-LSTM-or-GRU-networks-is-the-forget-gate-sufficient
+    * https://github.com/google/python-fire/blob/master/doc/guide.md
 """
 
 import fire
 import random
+from Language import LanguageUtils
 from Language import LangDef
 
 # Pytorch includes
@@ -20,6 +22,10 @@ import torch
 import torch.nn as nn
 from torch import optim
 from torch.autograd import Variable
+
+# Encoder and Decoder includes
+from Seq2SeqAttention import EncoderGRU
+from Seq2SeqAttention import AttentionDecoderGRU
 
 # Check if cuda is available and populate flag accordingly.
 use_cuda = torch.cuda.is_available()
@@ -97,17 +103,46 @@ def train_step(in_var, label_var, encoder, decoder, enc_optim, dec_optimizer, cr
 
     return loss.data[0] / target_length
 
+def sentence_2_variable(lang, sentence):
+    """ Convert sentence (streams of word vectors) to pytorch variable
+    """
+    indexes = lang.sentence_2_indexes(sentence)
+    indexes.append(LangDef.EndToken)
+    result = Variable(torch.LongTensor(indexes).view(-1, 1))
+    if use_cuda:
+        return result.cuda()
+    else:
+        return result
 
-def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, learning_rate=0.01):
+
+def pair_2_variable(in_lang, target_lang, pair):
+    input_variable = sentence_2_variable(in_lang, pair[0])
+    target_variable = sentence_2_variable(target_lang, pair[1])
+    return (input_variable, target_variable)
+
+
+def train(n_iters=7500, train_file='data/train.txt', print_every=7500, plot_every=500, learn_rate=0.01, hidd_size=16):
     plot_losses = []
     print_loss_total = 0  # Reset every print_every
     plot_loss_total = 0  # Reset every plot_every
 
-    # Configure optimizer for decoder and encoder as Stochastic Gradient Descent
-    encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
-    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
+    # Read and prepare train file
+    input_lang, output_lang, pairs = LanguageUtils.prepare_data('question','interpet',reverse=False, file_path=train_file)
 
-    training_pairs = [variablesFromPair(random.choice(pairs))
+    # Initialize Encoder and Decoder
+    encoder = EncoderGRU(input_lang.n_words, hidd_size)
+    decoder = AttentionDecoderGRU(hidden_size=hidd_size, output_size=output_lang.n_words, n_layers=1, dropout_p=0.1)
+
+    # Push encoder and decoder to the GPU
+    if use_cuda:
+        encoder1 = encoder.cuda()
+        attn_decoder1 = decoder.cuda()
+
+    # Configure optimizer for decoder and encoder as Stochastic Gradient Descent
+    encoder_optimizer = optim.SGD(encoder.parameters(), lr=learn_rate)
+    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learn_rate)
+
+    training_pairs = [pair_2_variable(input_lang, output_lang, random.choice(pairs))
                       for i in range(n_iters)]
 
     # Get negative log likelihood loss (Multinomial Cross entropy)
@@ -134,4 +169,14 @@ def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, lear
             plot_losses.append(plot_loss_avg)
             plot_loss_total = 0
 
+
+    # Save the encoder and decoder parameters
+    torch.save(encoder.state_dict(), 'encoder.pkl')
+    torch.save(decoder.state_dict(), 'decoder.pkl')
+
     return plot_losses
+
+
+if __name__ == '__main__':
+  # Only expose the train function to the command line
+  fire.Fire(train)
