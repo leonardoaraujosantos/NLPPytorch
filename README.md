@@ -33,6 +33,11 @@ test cases: 1 | 1 passed
 assertions: - none -
 
 ```
+### Train model
+From folder __src/python/__ just run:
+```bash
+python Train.py --print_every=100
+```
 
 ### Run tests (Python sequence to sequence with attention)
 From folder __src/python/test__ execute "pytest -s"
