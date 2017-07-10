@@ -6,6 +6,17 @@ Doing some NLP with Pytorch
 pip install http://download.pytorch.org/whl/cu80/torch-0.1.12.post2-cp35-cp35m-linux_x86_64.whl 
 pip install torchvision
 
+# Helper class for glove
+git clone https://github.com/pytorch/text.git
+cd text
+python setup.py install
+```
+### Install python requirements (OSX)
+```bash
+pip install http://download.pytorch.org/whl/torch-0.1.12.post2-cp35-cp35m-macosx_10_7_x86_64.whl 
+pip install torchvision
+
+# Helper class for glove
 git clone https://github.com/pytorch/text.git
 cd text
 python setup.py install
