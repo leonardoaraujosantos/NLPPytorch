@@ -1,6 +1,16 @@
 # Introduction
 Doing some NLP with Pytorch
 
+### Install python requirements
+```bash
+pip install http://download.pytorch.org/whl/cu80/torch-0.1.12.post2-cp35-cp35m-linux_x86_64.whl 
+pip install torchvision
+
+git clone https://github.com/pytorch/text.git
+cd text
+python setup.py install
+```
+
 ### Run Vanilla C++11 matcher
 Just build (qmake) project at __src/cpp14/vanilla_matcher__
 ``` bash
