@@ -1,7 +1,7 @@
 # Introduction
 Doing some NLP with Pytorch
 
-### Run tests
+### Run tests (Python sequence to sequence with attention)
 From folder __src/python/test__ execute "pytest -s"
 ```bash
 platform linux -- Python 3.5.2, pytest-3.0.5, py-1.4.32, pluggy-0.4.0
