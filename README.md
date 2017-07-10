@@ -1,7 +1,7 @@
 # Introduction
 Doing some NLP with Pytorch
 
-### Install python requirements
+### Install python requirements (Python 3.5 with Pytorch and Pytorch-text)
 ```bash
 pip install http://download.pytorch.org/whl/cu80/torch-0.1.12.post2-cp35-cp35m-linux_x86_64.whl 
 pip install torchvision
