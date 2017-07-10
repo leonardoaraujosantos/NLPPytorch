@@ -11,6 +11,8 @@ References:
     * https://www.quora.com/Should-you-use-teacher-forcing-in-LSTM-or-GRU-networks-is-the-forget-gate-sufficient
     * https://github.com/google/python-fire/blob/master/doc/guide.md
     * https://github.com/pytorch/examples/blob/master/imagenet/main.py
+    * https://github.com/2014mchidamb/TorchGlove
+    * https://github.com/pytorch/examples/blob/master/snli/train.py
 
 How to use:
 python Train.py --print_every=100

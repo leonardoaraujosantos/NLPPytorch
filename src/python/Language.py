@@ -14,6 +14,9 @@ from torch.autograd import Variable
 # Check if cuda is available and populate flag accordingly.
 use_cuda = torch.cuda.is_available()
 
+# Pytorch extension for NLP (Datasets, and some tools like word2vec and glove)
+from torchtext.vocab import load_word_vectors
+
 
 # Define start-of-sequence and end-of-sequence
 class LangDef:
@@ -23,12 +26,18 @@ class LangDef:
 
 
 class LanguageUtils:
-    def __init__(self, name=''):
+    def __init__(self, name='', use_glove=False):
         self.name = name
         self.word2index = {}
         self.word2count = {}
         self.index2word = {LangDef.StartToken: "SOS", LangDef.EndToken: "EOS"}
         self.n_words = 2  # Count SOS and EOS
+
+        if use_glove:
+            # Get a dictionary of words (word to vec) with word vector size of 100 dimensions
+            # It will download around 800Mb if necessary
+            self.__wv_dict, self.__wv_arr, self.__wv_size = load_word_vectors('.', 'glove.6B', 100)
+            print('Loaded', len(self.__wv_arr), 'words')
 
     def add_sentence(self, sentence):
         for word in sentence.split(' '):
@@ -54,6 +63,29 @@ class LanguageUtils:
 
         return list_index
         #return [self.word2index[word] for word in sentence.split(' ')]
+
+    def sentence_2_embeddings(self, sentence):
+        list_index = []
+        for word in sentence.split(' '):
+            try:
+                list_index.append(self.get_embeddings(word))
+            except:
+                print('word:', word, 'not on dictionary, replace with EOS')
+                list_index.append(LangDef.EndToken)
+
+        return list_index
+
+    def get_embeddings(self, word):
+        """ Glove word to vector
+        """
+        return self.__wv_arr[self.__wv_dict[LanguageUtils.normalize_string(word)]]
+
+    def get_closest(self, d, n=10):
+        """ Get closes n words
+        Consider as a vec_2_word, that could return more than one element
+        """
+        all_dists = [(w, torch.dist(d, self.get_embeddings(w))) for w in self.__wv_dict]
+        return sorted(all_dists, key=lambda t: t[1])[:n]
 
     @staticmethod
     def unicode_2_ascii(in_string):
