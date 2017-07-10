@@ -1,6 +1,39 @@
 # Introduction
 Doing some NLP with Pytorch
 
+### Run Vanilla C++11 matcher
+Just build (qmake) project at __src/cpp14/vanilla_matcher__
+``` bash
+qmake vanilla_matcher.pro
+make
+./vanilla_matcher
+
+I would like some Thai food
+thai
+-----------END QUESTION-----------
+Where can I find good sushi
+sushi
+-----------END QUESTION-----------
+Find me a place that does tapas
+NONE
+-----------END QUESTION-----------
+Which restaurants do East Asian food
+east
+asian
+-----------END QUESTION-----------
+Which restaurants do West Indian food
+west
+indian
+-----------END QUESTION-----------
+What is the weather like today
+NONE
+-----------END QUESTION-----------
+===============================================================================
+test cases: 1 | 1 passed
+assertions: - none -
+
+```
+
 ### Run tests (Python sequence to sequence with attention)
 From folder __src/python/test__ execute "pytest -s"
 ```bash
